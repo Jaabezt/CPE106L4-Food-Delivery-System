@@ -1,15 +1,18 @@
 class MenuItem:
     """
-    Represents a single food item in the menu.
+    Represents a single menu item.
     """
 
     def __init__(self, item_id, name, price, category):
 
+        # Encapsulation
         self.__item_id = item_id
         self.__name = name
         self.__price = float(price)
         self.__category = category
 
+
+    # Getters
 
     def get_item_id(self):
 
@@ -31,6 +34,9 @@ class MenuItem:
         return self.__category
 
 
+
+    # Update menu item
+
     def update_item(self, name, price, category):
 
         self.__name = name
@@ -38,31 +44,40 @@ class MenuItem:
         self.__category = category
 
 
+
+    # Display single item
+
     def display_item(self):
 
         print(
-            f"{self.__item_id} | "
-            f"{self.__name} | "
-            f"₱{self.__price:.2f} | "
-            f"{self.__category}"
+            f"{self.__item_id:<8}"
+            f"{self.__name:<30}"
+            f"₱{self.__price:>7.2f}"
         )
 
 
 
 class Menu:
     """
-    Manages MenuItem objects.
+    Handles multiple MenuItem objects.
     """
 
     def __init__(self):
 
+        # Private list of MenuItem objects
         self.__items = []
 
+
+
+    # Add item
 
     def add_item(self, item):
 
         self.__items.append(item)
 
+
+
+    # Remove item
 
     def remove_item(self, item_id):
 
@@ -78,6 +93,9 @@ class Menu:
         return False
 
 
+
+    # Find item
+
     def find_item(self, item_id):
 
         for item in self.__items:
@@ -90,12 +108,30 @@ class Menu:
         return None
 
 
+
+    # Display menu
+
     def display_menu(self):
 
-        print("\n========== CAFE MENU ==========")
+        print("\n========== CAFE MENU ==========\n")
+
+        current_category = None
+
 
         for item in self.__items:
 
+            category = item.get_category()
+
+
+            if category != current_category:
+
+                print(f"\n--- {category.upper()} ---")
+
+                current_category = category
+
+
             item.display_item()
 
-        print("===============================\n")
+
+
+        print("\n===============================\n")
