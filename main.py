@@ -49,7 +49,8 @@ def customer_management():
 
             save_data(
                 customers,
-                transactions
+                transactions,
+                cafe_menu
             )
 
             print("\nCustomer added successfully!")
@@ -335,7 +336,8 @@ def create_food_order():
 
         save_data(
             customers,
-            transactions
+            transactions,
+            cafe_menu
         )
 
         print("\nOrder confirmed!")
@@ -519,7 +521,8 @@ def track_delivery():
 
         save_data(
             customers,
-            transactions
+            transactions,
+            cafe_menu
         )
 
         print("\nDelivery created!")
@@ -549,7 +552,8 @@ def track_delivery():
 
             save_data(
                 customers,
-                transactions
+                transactions,
+                cafe_menu
             )
 
             print(
@@ -568,7 +572,8 @@ def track_delivery():
 
             save_data(
                 customers,
-                transactions
+                transactions,
+                cafe_menu
             )
 
             complete_transactions()
