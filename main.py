@@ -91,7 +91,8 @@ def customer_management():
 
                 save_data(
                     customers,
-                    transactions
+                    transactions,
+                    cafe_menu
                 )
 
                 print("\nCustomer updated successfully!")
@@ -632,7 +633,8 @@ def complete_transactions():
 
     save_data(
         customers,
-        transactions
+        transactions, 
+        cafe_menu
     )
 
 
@@ -727,7 +729,8 @@ def main():
 
             save_data(
                 customers,
-                transactions
+                transactions,
+                cafe_menu
             )
 
             print(
