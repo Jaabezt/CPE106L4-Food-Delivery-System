@@ -1,11 +1,11 @@
 from customer import Customer
+from id_generator import generate_id
 from menu import MenuItem
 from menu_list import create_cafe_menu
 from order import Order
 from payment import CashPayment, CardPayment
 from delivery import Delivery
 from transaction import Transaction
-
 from data_manager import save_data, load_data
 
 
@@ -27,11 +27,10 @@ def customer_management():
 
         if choice == "1":
 
-            customer_id = input("Enter Customer ID: ")
-
-            if customer_id in customers:
-                print("\nCustomer ID already exists.")
-                continue
+            customer_id = generate_id(
+                "CUST",
+                customers.keys()
+            )
 
             name = input("Enter Name: ")
             address = input("Enter Address: ")
@@ -46,9 +45,13 @@ def customer_management():
 
             customers[customer_id] = customer
 
-            save_data(customers, transactions)
+            save_data(
+                customers,
+                transactions
+            )
 
             print("\nCustomer added successfully!")
+            print(f"Customer ID: {customer_id}")
 
         elif choice == "2":
 
@@ -79,7 +82,10 @@ def customer_management():
                     phone
                 )
 
-                save_data(customers, transactions)
+                save_data(
+                    customers,
+                    transactions
+                )
 
                 print("\nCustomer updated successfully!")
 
@@ -110,11 +116,15 @@ def menu_management():
 
         elif choice == "2":
 
-            item_id = input("Enter Item ID: ")
+            existing_item_ids = [
+                item.get_item_id()
+                for item in cafe_menu.get_items()
+            ]
 
-            if cafe_menu.find_item(item_id) is not None:
-                print("\nItem ID already exists.")
-                continue
+            item_id = generate_id(
+                "ITEM",
+                existing_item_ids
+            )
 
             name = input("Enter Item Name: ")
 
@@ -136,13 +146,18 @@ def menu_management():
             cafe_menu.add_item(item)
 
             print("\nMenu item added successfully!")
+            print(f"Item ID: {item_id}")
 
         elif choice == "3":
 
-            item_id = input("Enter Item ID to remove: ")
+            item_id = input(
+                "Enter Item ID to remove: "
+            )
 
             if cafe_menu.remove_item(item_id):
-                print("\nMenu item removed successfully!")
+                print(
+                    "\nMenu item removed successfully!"
+                )
             else:
                 print("\nMenu item not found.")
 
@@ -162,17 +177,18 @@ def create_food_order():
         print("Please add a customer first.")
         return
 
-    customer_id = input("Enter Customer ID: ")
+    customer_id = input(
+        "Enter Customer ID: "
+    )
 
     if customer_id not in customers:
         print("\nCustomer not found.")
         return
 
-    order_id = input("Enter Order ID: ")
-
-    if order_id in transactions:
-        print("\nOrder ID already exists.")
-        return
+    order_id = generate_id(
+        "ORD",
+        transactions.keys()
+    )
 
     customer = customers[customer_id]
 
@@ -205,11 +221,15 @@ def create_food_order():
             )
 
             if quantity <= 0:
-                print("\nQuantity must be greater than zero.")
+                print(
+                    "\nQuantity must be greater than zero."
+                )
                 continue
 
         except ValueError:
-            print("\nPlease enter a valid quantity.")
+            print(
+                "\nPlease enter a valid quantity."
+            )
             continue
 
         order.add_item(
@@ -223,7 +243,10 @@ def create_food_order():
         )
 
     if not order.get_items():
-        print("\nNo items were added. Order cancelled.")
+        print(
+            "\nNo items were added. "
+            "Order cancelled."
+        )
         return
 
     order.display_order()
@@ -243,9 +266,13 @@ def create_food_order():
             "transaction": None
         }
 
-        save_data(customers, transactions)
+        save_data(
+            customers,
+            transactions
+        )
 
         print("\nOrder confirmed!")
+        print(f"Order ID: {order_id}")
 
     else:
         print("\nOrder cancelled.")
@@ -259,7 +286,9 @@ def process_payment():
         print("No orders available.")
         return
 
-    order_id = input("Enter Order ID: ")
+    order_id = input(
+        "Enter Order ID: "
+    )
 
     if order_id not in transactions:
         print("\nOrder not found.")
@@ -268,25 +297,45 @@ def process_payment():
     record = transactions[order_id]
 
     if record["payment"] is not None:
-        print("\nPayment has already been processed.")
+        print(
+            "\nPayment has already been processed."
+        )
         return
 
     order = record["order"]
 
     amount = order.calculate_total()
 
-    print(f"\nAmount to pay: ₱{amount:.2f}")
+    print(
+        f"\nAmount to pay: ₱{amount:.2f}"
+    )
 
     print("\n1. Cash")
     print("2. Card")
 
-    choice = input("Select payment method: ")
+    choice = input(
+        "Select payment method: "
+    )
 
     if choice not in ("1", "2"):
         print("\nInvalid payment method.")
         return
 
-    payment_id = input("Enter Payment ID: ")
+    payment_ids = []
+
+    for record_item in transactions.values():
+
+        payment = record_item["payment"]
+
+        if payment is not None:
+            payment_ids.append(
+                payment.get_payment_id()
+            )
+
+    payment_id = generate_id(
+        "PAY",
+        payment_ids
+    )
 
     if choice == "1":
 
@@ -302,15 +351,23 @@ def process_payment():
             amount
         )
 
-    print("\n" + payment.process_payment())
+    print(
+        "\n" + payment.process_payment()
+    )
 
     record["payment"] = payment
 
     order.update_status("Preparing")
 
-    save_data(customers, transactions)
+    save_data(
+        customers,
+        transactions
+    )
 
-    print("\nPayment processed successfully.")
+    print(
+        "\nPayment processed successfully!"
+    )
+    print(f"Payment ID: {payment_id}")
 
 
 def track_delivery():
@@ -321,7 +378,9 @@ def track_delivery():
         print("No orders available.")
         return
 
-    order_id = input("Enter Order ID: ")
+    order_id = input(
+        "Enter Order ID: "
+    )
 
     if order_id not in transactions:
         print("\nOrder not found.")
@@ -333,15 +392,31 @@ def track_delivery():
     payment = record["payment"]
 
     if payment is None:
-        print("\nPayment has not been processed yet.")
+        print(
+            "\nPayment has not been processed yet."
+        )
         return
 
     delivery = record["delivery"]
 
     if delivery is None:
 
-        delivery_id = input(
-            "Enter Delivery ID: "
+        delivery_ids = []
+
+        for record_item in transactions.values():
+
+            existing_delivery = (
+                record_item["delivery"]
+            )
+
+            if existing_delivery is not None:
+                delivery_ids.append(
+                    existing_delivery.get_delivery_id()
+                )
+
+        delivery_id = generate_id(
+            "DEL",
+            delivery_ids
         )
 
         delivery = Delivery(
@@ -352,7 +427,13 @@ def track_delivery():
 
         record["delivery"] = delivery
 
-        save_data(customers, transactions)
+        save_data(
+            customers,
+            transactions
+        )
+
+        print("\nDelivery created!")
+        print(f"Delivery ID: {delivery_id}")
 
     while True:
 
@@ -362,7 +443,9 @@ def track_delivery():
         print("2. Delivered")
         print("3. Back")
 
-        choice = input("Enter your choice: ")
+        choice = input(
+            "Enter your choice: "
+        )
 
         if choice == "1":
 
@@ -374,9 +457,14 @@ def track_delivery():
                 "Out for Delivery"
             )
 
-            save_data(customers, transactions)
+            save_data(
+                customers,
+                transactions
+            )
 
-            print("\nDelivery status updated.")
+            print(
+                "\nDelivery status updated."
+            )
 
         elif choice == "2":
 
@@ -388,7 +476,10 @@ def track_delivery():
                 "Delivered"
             )
 
-            save_data(customers, transactions)
+            save_data(
+                customers,
+                transactions
+            )
 
             complete_transactions()
 
@@ -405,6 +496,17 @@ def track_delivery():
 
 def complete_transactions():
 
+    transaction_ids = []
+
+    for record in transactions.values():
+
+        transaction = record["transaction"]
+
+        if transaction is not None:
+            transaction_ids.append(
+                transaction.get_transaction_id()
+            )
+
     for order_id, record in transactions.items():
 
         order = record["order"]
@@ -418,8 +520,9 @@ def complete_transactions():
             and record["transaction"] is None
         ):
 
-            transaction_id = (
-                "TXN" + order_id.replace("ORD", "")
+            transaction_id = generate_id(
+                "TXN",
+                transaction_ids
             )
 
             transaction = Transaction(
@@ -430,6 +533,15 @@ def complete_transactions():
             )
 
             record["transaction"] = transaction
+
+            transaction_ids.append(
+                transaction_id
+            )
+
+    save_data(
+        customers,
+        transactions
+    )
 
 
 def view_completed_transactions():
@@ -452,7 +564,9 @@ def view_completed_transactions():
             found = True
 
     if not found:
-        print("No completed transactions found.")
+        print(
+            "No completed transactions found."
+        )
 
     print(
         "============================================"
@@ -464,8 +578,9 @@ def main():
     global customers
     global transactions
 
-    # Load saved data when program starts
-    customers, transactions = load_data(cafe_menu)
+    customers, transactions = load_data(
+        cafe_menu
+    )
 
     print("\nData loaded successfully.")
 
@@ -486,24 +601,32 @@ def main():
         print("7. Exit")
         print("========================================")
 
-        choice = input("Enter your choice: ")
+        choice = input(
+            "Enter your choice: "
+        )
 
         if choice == "1":
+
             customer_management()
 
         elif choice == "2":
+
             menu_management()
 
         elif choice == "3":
+
             create_food_order()
 
         elif choice == "4":
+
             process_payment()
 
         elif choice == "5":
+
             track_delivery()
 
         elif choice == "6":
+
             view_completed_transactions()
 
         elif choice == "7":
@@ -521,7 +644,10 @@ def main():
             break
 
         else:
-            print("\nInvalid choice. Please try again.")
+
+            print(
+                "\nInvalid choice. Please try again."
+            )
 
 
 if __name__ == "__main__":
