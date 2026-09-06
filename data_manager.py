@@ -6,38 +6,41 @@ from order import Order
 from payment import CashPayment, CardPayment
 from delivery import Delivery
 from transaction import Transaction
+from menu import MenuItem
 
 
 DATA_FILE = "data.json"
 
 
-def save_data(customers, transactions):
-    """
-    Saves customers, orders, payments, deliveries,
-    and completed transactions to a JSON file.
-    """
+def save_data(customers, transactions, menu):
 
     data = {
-        "customers": {},
-        "transactions": {}
+        "customers": [],
+        "menu_items": [],
+        "transactions": []
     }
 
-    # ==========================
-    # SAVE CUSTOMERS
-    # ==========================
+    # Save customers
+    for customer in customers.values():
 
-    for customer_id, customer in customers.items():
-
-        data["customers"][customer_id] = {
+        data["customers"].append({
+            "customer_id": customer.get_customer_id(),
             "name": customer.get_name(),
             "address": customer.get_address(),
             "phone": customer.get_phone()
-        }
+        })
 
-    # ==========================
-    # SAVE TRANSACTIONS / ORDERS
-    # ==========================
+    # Save menu items
+    for item in menu.get_items():
 
+        data["menu_items"].append({
+            "item_id": item.get_item_id(),
+            "name": item.get_name(),
+            "price": item.get_price(),
+            "category": item.get_category()
+        })
+
+    # Save transactions
     for order_id, record in transactions.items():
 
         order = record["order"]
@@ -52,7 +55,6 @@ def save_data(customers, transactions):
             "items": []
         }
 
-        # Save order items
         for order_item in order.get_items():
 
             menu_item = order_item.get_menu_item()
@@ -62,16 +64,7 @@ def save_data(customers, transactions):
                 "quantity": order_item.get_quantity()
             })
 
-        record_data = {
-            "order": order_data,
-            "payment": None,
-            "delivery": None,
-            "transaction": None
-        }
-
-        # ==========================
-        # SAVE PAYMENT
-        # ==========================
+        payment_data = None
 
         if payment is not None:
 
@@ -80,93 +73,102 @@ def save_data(customers, transactions):
             if isinstance(payment, CardPayment):
                 payment_type = "Card"
 
-            record_data["payment"] = {
+            payment_data = {
                 "payment_id": payment.get_payment_id(),
                 "amount": payment.get_amount(),
                 "type": payment_type
             }
 
-        # ==========================
-        # SAVE DELIVERY
-        # ==========================
+        delivery_data = None
 
         if delivery is not None:
 
-            record_data["delivery"] = {
+            delivery_data = {
                 "delivery_id": delivery.get_delivery_id(),
                 "order_id": delivery.get_order_id(),
                 "address": delivery.get_address(),
                 "status": delivery.get_status()
             }
 
-        # ==========================
-        # SAVE TRANSACTION
-        # ==========================
+        transaction_data = None
 
         if transaction is not None:
 
-            record_data["transaction"] = {
+            transaction_data = {
                 "transaction_id": transaction.get_transaction_id()
             }
 
-        data["transactions"][order_id] = record_data
-
-    # ==========================
-    # WRITE JSON FILE
-    # ==========================
+        data["transactions"].append({
+            "order": order_data,
+            "payment": payment_data,
+            "delivery": delivery_data,
+            "transaction": transaction_data
+        })
 
     with open(DATA_FILE, "w", encoding="utf-8") as file:
-        json.dump(data, file, indent=4)
 
-    print("\nData saved successfully.")
+        json.dump(
+            data,
+            file,
+            indent=4
+        )
 
 
 def load_data(menu):
-    """
-    Loads customers and transactions from the JSON file.
-    Reconstructs the required Python objects.
-    """
+
+    if not os.path.exists(DATA_FILE):
+
+        return {}, {}
+
+    with open(
+        DATA_FILE,
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        data = json.load(file)
 
     customers = {}
     transactions = {}
 
-    if not os.path.exists(DATA_FILE):
-        return customers, transactions
-
-    try:
-        with open(DATA_FILE, "r", encoding="utf-8") as file:
-            data = json.load(file)
-
-    except (json.JSONDecodeError, OSError):
-        print("\nWarning: Could not load data.json.")
-        return customers, transactions
-
-    # ==========================
-    # LOAD CUSTOMERS
-    # ==========================
-
-    for customer_id, info in data.get("customers", {}).items():
+    # Load customers
+    for customer_data in data.get("customers", []):
 
         customer = Customer(
-            customer_id,
-            info["name"],
-            info["address"],
-            info["phone"]
+            customer_data["customer_id"],
+            customer_data["name"],
+            customer_data["address"],
+            customer_data["phone"]
         )
 
-        customers[customer_id] = customer
+        customers[
+            customer.get_customer_id()
+        ] = customer
 
-    # ==========================
-    # LOAD TRANSACTIONS / ORDERS
-    # ==========================
+    # Load menu items
+    saved_menu_items = data.get("menu_items", [])
 
-    for order_id, record in data.get("transactions", {}).items():
+    for item_data in saved_menu_items:
 
-        order_data = record["order"]
+        # Avoid duplicate items
+        if menu.find_item(item_data["item_id"]) is None:
+
+            menu.add_item(
+                MenuItem(
+                    item_data["item_id"],
+                    item_data["name"],
+                    item_data["price"],
+                    item_data["category"]
+                )
+            )
+
+    # Load transactions
+    for record_data in data.get("transactions", []):
+
+        order_data = record_data["order"]
 
         customer_id = order_data["customer_id"]
 
-        # Make sure referenced customer exists
         if customer_id not in customers:
             continue
 
@@ -177,13 +179,11 @@ def load_data(menu):
             customer
         )
 
-        # Restore order status
         order.update_status(
-            order_data.get("status", "Pending")
+            order_data["status"]
         )
 
-        # Restore order items
-        for item_data in order_data.get("items", []):
+        for item_data in order_data["items"]:
 
             menu_item = menu.find_item(
                 item_data["item_id"]
@@ -196,37 +196,29 @@ def load_data(menu):
                     item_data["quantity"]
                 )
 
-        # ==========================
-        # LOAD PAYMENT
-        # ==========================
-
         payment = None
 
-        payment_data = record.get("payment")
+        payment_data = record_data["payment"]
 
         if payment_data is not None:
 
-            if payment_data["type"] == "Card":
-
-                payment = CardPayment(
-                    payment_data["payment_id"],
-                    payment_data["amount"]
-                )
-
-            else:
+            if payment_data["type"] == "Cash":
 
                 payment = CashPayment(
                     payment_data["payment_id"],
                     payment_data["amount"]
                 )
 
-        # ==========================
-        # LOAD DELIVERY
-        # ==========================
+            else:
+
+                payment = CardPayment(
+                    payment_data["payment_id"],
+                    payment_data["amount"]
+                )
 
         delivery = None
 
-        delivery_data = record.get("delivery")
+        delivery_data = record_data["delivery"]
 
         if delivery_data is not None:
 
@@ -237,16 +229,12 @@ def load_data(menu):
             )
 
             delivery.update_status(
-                delivery_data.get("status", "Preparing")
+                delivery_data["status"]
             )
-
-        # ==========================
-        # LOAD TRANSACTION
-        # ==========================
 
         transaction = None
 
-        transaction_data = record.get("transaction")
+        transaction_data = record_data["transaction"]
 
         if transaction_data is not None:
 
@@ -257,7 +245,9 @@ def load_data(menu):
                 delivery
             )
 
-        transactions[order_id] = {
+        transactions[
+            order.get_order_id()
+        ] = {
             "order": order,
             "payment": payment,
             "delivery": delivery,

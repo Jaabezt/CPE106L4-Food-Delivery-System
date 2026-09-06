@@ -16,7 +16,9 @@ cafe_menu = create_cafe_menu()
 
 
 def customer_management():
+
     while True:
+
         print("\n========== CUSTOMER MANAGEMENT ==========")
         print("1. Add Customer")
         print("2. View Customers")
@@ -56,19 +58,24 @@ def customer_management():
         elif choice == "2":
 
             if not customers:
+
                 print("\nNo customers found.")
 
             else:
+
                 print("\n========== CUSTOMERS ==========")
 
                 for customer in customers.values():
+
                     customer.display_customer()
 
                 print("===============================")
 
         elif choice == "3":
 
-            customer_id = input("Enter Customer ID: ")
+            customer_id = input(
+                "Enter Customer ID: "
+            )
 
             if customer_id in customers:
 
@@ -90,16 +97,20 @@ def customer_management():
                 print("\nCustomer updated successfully!")
 
             else:
+
                 print("\nCustomer not found.")
 
         elif choice == "4":
+
             break
 
         else:
+
             print("\nInvalid choice.")
 
 
 def menu_management():
+
     while True:
 
         print("\n========== MENU MANAGEMENT ==========")
@@ -116,25 +127,56 @@ def menu_management():
 
         elif choice == "2":
 
+            name = input("Enter Item Name: ")
+
+            try:
+
+                price = float(
+                    input("Enter Price: ")
+                )
+
+            except ValueError:
+
+                print("\nInvalid price.")
+                continue
+
+            print("\nSelect Category:")
+            print("1. Coffee")
+            print("2. Non-Coffee")
+            print("3. Main Meal")
+            print("4. Snack")
+            print("5. Side")
+
+            category_choice = input(
+                "Enter your choice: "
+            )
+
+            categories = {
+                "1": ("Coffee", "COF"),
+                "2": ("Non-Coffee", "DRK"),
+                "3": ("Main Meal", "ML"),
+                "4": ("Snack", "SNK"),
+                "5": ("Side", "SID")
+            }
+
+            if category_choice not in categories:
+
+                print("\nInvalid category.")
+                continue
+
+            category, prefix = categories[
+                category_choice
+            ]
+
             existing_item_ids = [
                 item.get_item_id()
                 for item in cafe_menu.get_items()
             ]
 
             item_id = generate_id(
-                "ITEM",
+                prefix,
                 existing_item_ids
             )
-
-            name = input("Enter Item Name: ")
-
-            try:
-                price = float(input("Enter Price: "))
-            except ValueError:
-                print("\nInvalid price.")
-                continue
-
-            category = input("Enter Category: ")
 
             item = MenuItem(
                 item_id,
@@ -147,6 +189,7 @@ def menu_management():
 
             print("\nMenu item added successfully!")
             print(f"Item ID: {item_id}")
+            print(f"Category: {category}")
 
         elif choice == "3":
 
@@ -155,16 +198,21 @@ def menu_management():
             )
 
             if cafe_menu.remove_item(item_id):
+
                 print(
                     "\nMenu item removed successfully!"
                 )
+
             else:
+
                 print("\nMenu item not found.")
 
         elif choice == "4":
+
             break
 
         else:
+
             print("\nInvalid choice.")
 
 
@@ -173,8 +221,10 @@ def create_food_order():
     print("\n========== CREATE FOOD ORDER ==========")
 
     if not customers:
+
         print("No customers registered.")
         print("Please add a customer first.")
+
         return
 
     customer_id = input(
@@ -182,7 +232,9 @@ def create_food_order():
     )
 
     if customer_id not in customers:
+
         print("\nCustomer not found.")
+
         return
 
     order_id = generate_id(
@@ -207,29 +259,39 @@ def create_food_order():
         )
 
         if item_id.upper() == "DONE":
+
             break
 
-        menu_item = cafe_menu.find_item(item_id)
+        menu_item = cafe_menu.find_item(
+            item_id
+        )
 
         if menu_item is None:
+
             print("\nMenu item not found.")
+
             continue
 
         try:
+
             quantity = int(
                 input("Enter Quantity: ")
             )
 
             if quantity <= 0:
+
                 print(
                     "\nQuantity must be greater than zero."
                 )
+
                 continue
 
         except ValueError:
+
             print(
                 "\nPlease enter a valid quantity."
             )
+
             continue
 
         order.add_item(
@@ -243,10 +305,12 @@ def create_food_order():
         )
 
     if not order.get_items():
+
         print(
             "\nNo items were added. "
             "Order cancelled."
         )
+
         return
 
     order.display_order()
@@ -257,7 +321,9 @@ def create_food_order():
 
     if confirm.upper() == "Y":
 
-        order.update_status("Confirmed")
+        order.update_status(
+            "Confirmed"
+        )
 
         transactions[order_id] = {
             "order": order,
@@ -275,6 +341,7 @@ def create_food_order():
         print(f"Order ID: {order_id}")
 
     else:
+
         print("\nOrder cancelled.")
 
 
@@ -283,7 +350,9 @@ def process_payment():
     print("\n========== PROCESS PAYMENT ==========")
 
     if not transactions:
+
         print("No orders available.")
+
         return
 
     order_id = input(
@@ -291,15 +360,19 @@ def process_payment():
     )
 
     if order_id not in transactions:
+
         print("\nOrder not found.")
+
         return
 
     record = transactions[order_id]
 
     if record["payment"] is not None:
+
         print(
             "\nPayment has already been processed."
         )
+
         return
 
     order = record["order"]
@@ -318,7 +391,9 @@ def process_payment():
     )
 
     if choice not in ("1", "2"):
+
         print("\nInvalid payment method.")
+
         return
 
     payment_ids = []
@@ -328,6 +403,7 @@ def process_payment():
         payment = record_item["payment"]
 
         if payment is not None:
+
             payment_ids.append(
                 payment.get_payment_id()
             )
@@ -357,17 +433,23 @@ def process_payment():
 
     record["payment"] = payment
 
-    order.update_status("Preparing")
+    order.update_status(
+        "Preparing"
+    )
 
     save_data(
         customers,
-        transactions
+        transactions,
+        cafe_menu
     )
 
     print(
         "\nPayment processed successfully!"
     )
-    print(f"Payment ID: {payment_id}")
+
+    print(
+        f"Payment ID: {payment_id}"
+    )
 
 
 def track_delivery():
@@ -375,7 +457,9 @@ def track_delivery():
     print("\n========== TRACK DELIVERY ==========")
 
     if not transactions:
+
         print("No orders available.")
+
         return
 
     order_id = input(
@@ -383,7 +467,9 @@ def track_delivery():
     )
 
     if order_id not in transactions:
+
         print("\nOrder not found.")
+
         return
 
     record = transactions[order_id]
@@ -392,9 +478,11 @@ def track_delivery():
     payment = record["payment"]
 
     if payment is None:
+
         print(
             "\nPayment has not been processed yet."
         )
+
         return
 
     delivery = record["delivery"]
@@ -410,6 +498,7 @@ def track_delivery():
             )
 
             if existing_delivery is not None:
+
                 delivery_ids.append(
                     existing_delivery.get_delivery_id()
                 )
@@ -488,9 +577,11 @@ def track_delivery():
             break
 
         elif choice == "3":
+
             break
 
         else:
+
             print("\nInvalid choice.")
 
 
@@ -503,6 +594,7 @@ def complete_transactions():
         transaction = record["transaction"]
 
         if transaction is not None:
+
             transaction_ids.append(
                 transaction.get_transaction_id()
             )
@@ -561,9 +653,11 @@ def view_completed_transactions():
         if transaction is not None:
 
             transaction.display_transaction()
+
             found = True
 
     if not found:
+
         print(
             "No completed transactions found."
         )

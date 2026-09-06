@@ -94,18 +94,30 @@ class Menu:
 
         print("\n========== CAFE MENU ==========\n")
 
-        current_category = None
+        categories = [
+            "Coffee",
+            "Non-Coffee",
+            "Main Meal",
+            "Snack",
+            "Side"
+        ]
 
-        for item in self.__items:
+        for category in categories:
 
-            category = item.get_category()
+            category_items = [
+                item
+                for item in self.__items
+                if item.get_category() == category
+            ]
 
-            if category != current_category:
+            if category_items:
 
-                print(f"\n--- {category.upper()} ---")
+                print(f"--- {category.upper()} ---")
 
-                current_category = category
+                for item in category_items:
 
-            item.display_item()
+                    item.display_item()
 
-        print("\n===============================\n")
+                print()
+
+        print("===============================\n")
