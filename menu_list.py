@@ -1,7 +1,5 @@
 from menu import Menu, MenuItem
 
-
-
 def create_cafe_menu():
 
     menu = Menu()

@@ -1,7 +1,6 @@
 from menu import MenuItem
 from customer import Customer
 
-
 class OrderItem:
     """
     Represents a menu item and its quantity in an order.

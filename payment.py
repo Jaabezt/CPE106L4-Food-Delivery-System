@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-
 class Payment(ABC):
     """
     Abstract payment class.

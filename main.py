@@ -1,7 +1,5 @@
 from menu_list import create_cafe_menu
 
-
-
 def main():
 
     cafe_menu = create_cafe_menu()

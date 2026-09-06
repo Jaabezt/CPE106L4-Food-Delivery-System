@@ -2,7 +2,6 @@ class Transaction:
     """
     Represents a completed food delivery transaction.
     """
-
     def __init__(self, transaction_id, order, payment, delivery):
         self.__transaction_id = transaction_id
         self.__order = order

@@ -2,7 +2,6 @@ class MenuItem:
     """
     Represents a single menu item.
     """
-
     def __init__(self, item_id, name, price, category):
 
         # Encapsulation

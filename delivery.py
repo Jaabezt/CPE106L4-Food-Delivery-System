@@ -2,7 +2,6 @@ class Delivery:
     """
     Handles delivery tracking for an order.
     """
-
     def __init__(self, delivery_id, order_id, address):
 
         self.__delivery_id = delivery_id
