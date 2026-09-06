@@ -92,32 +92,3 @@ class Order:
 
         print(f"\nTotal: ₱{self.calculate_total():.2f}")
         print("===========================\n")
-
-if __name__ == "__main__":
-    customer = Customer(
-        "C001",
-        "Juan Dela Cruz",
-        "Manila",
-        "09123456789"
-    )
-
-    burger = MenuItem(
-        "M001",
-        "Burger",
-        120,
-        "Main Course"
-    )
-
-    fries = MenuItem(
-        "M002",
-        "French Fries",
-        80,
-        "Side Dish"
-    )
-
-    order = Order("ORD001", customer)
-
-    order.add_item(burger, 2)
-    order.add_item(fries, 1)
-
-    order.display_order()
